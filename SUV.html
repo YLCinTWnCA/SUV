@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>MedFluid 加拿大 Start-up Visa PR 文件 Checklist（多人版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f5f5f5;
+    }
+    h1, h2, h3 {
+      margin-top: 0.6em;
+      margin-bottom: 0.4em;
+    }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      background: #f5f5f5;
+      padding-bottom: 8px;
+      z-index: 20;
+    }
+    button {
+      padding: 6px 10px;
+      margin-right: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button.primary {
+      background: #1976d2;
+      color: #fff;
+      border-color: #1976d2;
+    }
+    button.danger {
+      background: #e53935;
+      color: #fff;
+      border-color: #e53935;
+    }
+    .small {
+      font-size: 0.85em;
+    }
+    /* Tabs */
+    .tabs {
+      margin-top: 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .tab-button {
+      padding: 6px 10px;
+      border-radius: 4px 4px 0 0;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      background: #e0e0e0;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .tab-button.active {
+      background: #ffffff;
+      font-weight: 600;
+    }
+    .tab-content {
+      display: none;
+      margin-top: 0;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .member-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0 12px;
+      flex-wrap: wrap;
+    }
+    .member-header input[type="text"] {
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      min-width: 160px;
+    }
+    .member-header label {
+      font-size: 0.9em;
+    }
+    /* Checklist sections */
+    .section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .item {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .item label {
+      margin-left: 8px;
+      flex: 1;
+      line-height: 1.4;
+      cursor: pointer;
+    }
+    .hint {
+      font-size: 0.85em;
+      color: #555;
+      margin-left: 26px;
+      margin-bottom: 6px;
+    }
+    @media (prefers-color-scheme: dark) {
+      body {background:#121212;color:#eee;}
+      .toolbar {background:#121212;}
+      .tab-button {background:#333;border-color:#555;color:#eee;}
+      .tab-button.active {background:#1e1e1e;}
+      .section {background:#1e1e1e;box-shadow:none;}
+      button {background:#333;color:#eee;border-color:#555;}
+      button.primary {background:#1976d2;border-color:#1976d2;}
+      button.danger {background:#e53935;border-color:#e53935;}
+      .hint {color:#aaa;}
+      .member-header input[type="text"] {background:#111;color:#eee;border-color:#555;}
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <h1>MedFluid SUV PR 文件 Checklist（多人版）</h1>
+    <button class="danger" onclick="clearAll()">清除所有人勾選紀錄</button>
+    <div class="small">每個分頁代表一位成員，可填寫成員姓名；勾選與姓名皆會存到瀏覽器（localStorage）。</div>
+    <div class="tabs" id="tabs"></div>
+  </div>
+
+  <!-- 五個成員分頁 -->
+  <div id="tab-contents"></div>
+
+  <script>
+    const MEMBER_COUNT = 5;
+    const STORAGE_KEY = 'medfluid_suv_checklist_multi_v1';
+
+    // 所有 checkbox ID（不帶成員編號）的清單
+    const BASE_CHECKBOX_IDS = [
+      // 身分與戶籍
+      'passport_all','birth_cert_family','marriage_cert','household_register',
+      // SUV
+      'letter_support','commitment_copy','company_registration','cap_table',
+      'ip_docs','business_plan','traction_docs',
+      // 個人資格
+      'language_test','police_tw','police_other','medical_exam','photos',
+      // 財力
+      'settlement_funds_cert','bank_statements','source_of_funds',
+      // 表單與費用
+      'imm0008','imm0008dep','schedule13','imm5669','imm5406','fees_paid','imm5760'
+    ];
+
+    // 讀取整體狀態
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return {};
+      try {
+        return JSON.parse(saved) || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    // 儲存整體狀態
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    // 建立 tabs 與內容
+    function initUI() {
+      const tabsContainer = document.getElementById('tabs');
+      const contentsContainer = document.getElementById('tab-contents');
+      const state = loadState();
+
+      for (let i = 1; i <= MEMBER_COUNT; i++) {
+        // Tab 按鈕
+        const tabBtn = document.createElement('button');
+        tabBtn.className = 'tab-button' + (i === 1 ? ' active' : '');
+        tabBtn.textContent = state[`memberName_${i}`] || `成員 ${i}`;
+        tabBtn.dataset.member = String(i);
+        tabBtn.addEventListener('click', () => activateTab(i));
+        tabsContainer.appendChild(tabBtn);
+
+        // Tab 內容
+        const tabContent = document.createElement('div');
+        tabContent.className = 'tab-content' + (i === 1 ? ' active' : '');
+        tabContent.id = `tab-content-${i}`;
+        tabContent.innerHTML = buildMemberContentHtml(i);
+        contentsContainer.appendChild(tabContent);
+      }
+
+      // 載入各成員的 checkbox 狀態與姓名
+      restoreFromState(state);
+    }
+
+    // 建立單一成員內容 HTML
+    function buildMemberContentHtml(memberIndex) {
+      const m = memberIndex;
+      // 用 memberIndex 作為 prefix 產生獨立 ID
+      const id = (base) => `${base}_m${m}`;
+      return `
+        <div class="member-header">
+          <label for="memberName_${m}">成員名稱：</label>
+          <input type="text" id="memberName_${m}" placeholder="例如：創辦人 A / 配偶 / 小孩">
+          <button class="primary" onclick="saveMember(${m})">儲存本分頁狀態</button>
+        </div>
+
+        <div class="section" data-section="identity">
+          <h2>一、身分與戶籍文件（全家）</h2>
+          <div class="item">
+            <input type="checkbox" id="${id('passport_all')}">
+            <label for="${id('passport_all')}">所有家庭成員護照影本（彩色掃描，含照片與有效期頁）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('birth_cert_family')}">
+            <label for="${id('birth_cert_family')}">主申請人＋配偶＋小孩的出生證明或戶籍謄本（可證明親子關係）</label>
+          </div>
+          <div class="hint">步驟：戶政事務所申請戶籍謄本 → 交給合格譯者翻成英文 → 公證人公證，如需要再送駐外館處驗證。</div>
+          <div class="item">
+            <input type="checkbox" id="${id('marriage_cert')}">
+            <label for="${id('marriage_cert')}">結婚證書或載有婚姻關係的戶籍謄本（如適用）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('household_register')}">
+            <label for="${id('household_register')}">戶口名簿或整戶戶籍謄本（顯示全家成員）</label>
+          </div>
+          <div class="hint">建議整份翻譯成英文並公證，方便作為補強親屬與住址證明。</div>
+        </div>
+
+        <div class="section" data-section="suv">
+          <h2>二、Start-up Visa 相關文件</h2>
+          <div class="item">
+            <input type="checkbox" id="${id('letter_support')}">
+            <label for="${id('letter_support')}">Letter of Support（由 incubator 出具，PDF 檔）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('commitment_copy')}">
+            <label for="${id('commitment_copy')}">Commitment Certificate 副本（僅供自己存檔與說明用）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('company_registration')}">
+            <label for="${id('company_registration')}">MedFluid 公司設立與登記文件（台灣＋如有加拿大公司）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('cap_table')}">
+            <label for="${id('cap_table')}">股權結構資料（cap table、股東名單、股權授予／認股協議）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('ip_docs')}">
+            <label for="${id('ip_docs')}">IP 相關文件（技術讓渡協議、專利／著作權歸屬文件）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('business_plan')}">
+            <label for="${id('business_plan')}">Business plan / pitch deck（最新版，英文）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('traction_docs')}">
+            <label for="${id('traction_docs')}">營運證明（PoC、臨床合作、客戶合約、LOI、營收或使用數據等，如有）</label>
+          </div>
+        </div>
+
+        <div class="section" data-section="personal">
+          <h2>三、個人資格與紀錄</h2>
+          <div class="item">
+            <input type="checkbox" id="${id('language_test')}">
+            <label for="${id('language_test')}">語言成績（主申請人）（CLB 5 以上，例如 IELTS General 或 CELPIP 有效成績單）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('police_tw')}">
+            <label for="${id('police_tw')}">台灣全國性無犯罪紀錄（主申請人＋成人）（刑事警察局，建議中英文版）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('police_other')}">
+            <label for="${id('police_other')}">其他國家的無犯罪紀錄（主申請人＋成人）（過去 10 年任一國家連續居住超過 6 個月）</label>
+          </div>
+          <div class="hint">如非英文／法文，再做翻譯＋公證。</div>
+          <div class="item">
+            <input type="checkbox" id="${id('medical_exam')}">
+            <label for="${id('medical_exam')}">體檢（全家）（IRCC 指定 panel physician，保留收據或體檢回執）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('photos')}">
+            <label for="${id('photos')}">全家 IRCC 規格的大頭照電子檔</label>
+          </div>
+        </div>
+
+        <div class="section" data-section="funds">
+          <h2>四、財力證明與資金來源</h2>
+          <div class="item">
+            <input type="checkbox" id="${id('settlement_funds_cert')}">
+            <label for="${id('settlement_funds_cert')}">銀行存款證明（英文版，金額依家庭人數，四口之家約 28,000+ CAD 等值以上）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('bank_statements')}">
+            <label for="${id('bank_statements')}">最近 6 個月銀行對帳單（可中文＋英文翻譯）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('source_of_funds')}">
+            <label for="${id('source_of_funds')}">資金來源證明（房產買賣契約、股權出售證明、匯款紀錄等，如有）</label>
+          </div>
+        </div>
+
+        <div class="section" data-section="forms">
+          <h2>五、IRCC 表單與費用</h2>
+          <div class="item">
+            <input type="checkbox" id="${id('imm0008')}">
+            <label for="${id('imm0008')}">IMM 0008（Generic Application for Permanent Residence）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('imm0008dep')}">
+            <label for="${id('imm0008dep')}">IMM 0008DEP（如受養人超過表單可列數量時）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('schedule13')}">
+            <label for="${id('schedule13')}">Schedule 13 – Start-up Business Class</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('imm5669')}">
+            <label for="${id('imm5669')}">IMM 5669（Schedule A – Background/Declaration）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('imm5406')}">
+            <label for="${id('imm5406')}">IMM 5406（Additional Family Information）</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('fees_paid')}">
+            <label for="${id('fees_paid')}">申請費＋Right of Permanent Residence Fee＋生物資訊費付款完成並有收據</label>
+          </div>
+          <div class="item">
+            <input type="checkbox" id="${id('imm5760')}">
+            <label for="${id('imm5760')}">IMM 5760 SUV Document Checklist（最新版，已逐項核對）</label>
+          </div>
+        </div>
+      `;
+    }
+
+    // 啟用某一個 tab
+    function activateTab(memberIndex) {
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.member === String(memberIndex));
+      });
+      document.querySelectorAll('.tab-content').forEach(div => {
+        div.classList.toggle('active', div.id === `tab-content-${memberIndex}`);
+      });
+    }
+
+    // 從 localStorage 還原姓名與勾選
+    function restoreFromState(state) {
+      for (let m = 1; m <= MEMBER_COUNT; m++) {
+        const nameInput = document.getElementById(`memberName_${m}`);
+        if (nameInput && state[`memberName_${m}`]) {
+          nameInput.value = state[`memberName_${m}`];
+          // 同步 tab 標題
+          const tabBtn = document.querySelector(`.tab-button[data-member="${m}"]`);
+          if (tabBtn) tabBtn.textContent = state[`memberName_${m}`];
+        }
+
+        BASE_CHECKBOX_IDS.forEach(baseId => {
+          const id = `${baseId}_m${m}`;
+          const cb = document.getElementById(id);
+          if (cb && state.hasOwnProperty(id)) {
+            cb.checked = !!state[id];
+          }
+        });
+      }
+    }
+
+    // 儲存單一成員狀態（按下「儲存本分頁狀態」或手動呼叫）
+    function saveMember(memberIndex) {
+      const state = loadState();
+
+      // 保存姓名
+      const nameInput = document.getElementById(`memberName_${memberIndex}`);
+      if (nameInput) {
+        state[`memberName_${memberIndex}`] = nameInput.value || '';
+        const tabBtn = document.querySelector(`.tab-button[data-member="${memberIndex}"]`);
+        if (tabBtn) {
+          tabBtn.textContent = nameInput.value || `成員 ${memberIndex}`;
+        }
+      }
+
+      // 保存此成員所有 checkbox
+      BASE_CHECKBOX_IDS.forEach(baseId => {
+        const id = `${baseId}_m${memberIndex}`;
+        const cb = document.getElementById(id);
+        if (cb) {
+          state[id] = cb.checked;
+        }
+      });
+
+      saveState(state);
+      alert(`已儲存：成員 ${memberIndex} 的勾選與姓名`);
+    }
+
+    // 清除所有成員資料
+    function clearAll() {
+      if (!confirm('確定要清除所有人勾選與姓名紀錄？此動作無法復原。')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      // 取消所有勾選與姓名
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      document.querySelectorAll('input[type="text"][id^="memberName_"]').forEach(input => input.value = '');
+      document.querySelectorAll('.tab-button').forEach((btn, idx) => {
+        btn.textContent = `成員 ${idx + 1}`;
+      });
+    }
+
+    // checkbox / 姓名輸入變更時自動存檔
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('input[type="checkbox"]')) {
+        const id = e.target.id;
+        const state = loadState();
+        state[id] = e.target.checked;
+        saveState(state);
+      }
+      if (e.target.matches('input[type="text"][id^="memberName_"]')) {
+        const id = e.target.id; // memberName_X
+        const state = loadState();
+        state[id] = e.target.value || '';
+        saveState(state);
+        const m = id.split('_')[1];
+        const tabBtn = document.querySelector(`.tab-button[data-member="${m}"]`);
+        if (tabBtn) {
+          tabBtn.textContent = e.target.value || `成員 ${m}`;
+        }
+      }
+    });
+
+    // 初始化
+    initUI();
+  </script>
+</body>
+</html>
